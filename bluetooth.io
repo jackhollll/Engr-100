@@ -4,6 +4,7 @@
 #include <DHT_U.h>
 
 #define SENSORD1 13
+#define SENSORA1 A0
 // Feather HUZZAH ESP8266 note: use pins 3, 4, 5, 12, 13 or 14 --
 // Pin 15 can work but DHT must be disconnected during program upload.
 
@@ -78,6 +79,9 @@ void loop() {
                     Serial.println("Humidity sensor: " + String(event.relative_humidity));
                     break;
                   case 1:
+                    int sensorValue = analogRead(A0);
+                    int outputValue = map(sensorValue, 0, 1023, 100, 0);
+                    Serial.println("Soil Moisture: " + String(outputValue));
                     break;
                   case 2:
                     break;
