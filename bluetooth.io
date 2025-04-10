@@ -34,7 +34,7 @@ const uint8_t sensorAPins[4] = {A0, A1, A2, A3}; // Define input pins
 float temperature = 21.0; // Assume current temperature. Recommended to measure with DHT22
 float humidity = 25.0; // Assume current humidity. Recommended to measure with DHT22
 
-DHT_Unified dht[4] =
+DHT dht[4] =
 {
   {sensorDPins[0], DHTTYPE},
   {sensorDPins[1], DHTTYPE},
@@ -42,12 +42,14 @@ DHT_Unified dht[4] =
   {sensorDPins[3], DHTTYPE}
 };
 
+
+// Calibration Values
 MQ135 mq135[4] =
 {
-  {A0},
-  {A1},
-  {A3},
-  {A4}
+  {A0, 3.75, 1},
+  {A1, 3.75, 1},
+  {A3, 3.75, 1},
+  {A4, 3.75, 1}
 };
 
 void setup() {
@@ -76,6 +78,8 @@ void loop() {
   {
     int sensor = NO_SENSOR;
 
+    dht[port].begin();
+
     // Figures out which type sensor is in the port
     for (int i = 0; i < 4; i++) {
       digitalWrite(outPins[i], HIGH);
@@ -103,39 +107,39 @@ void loop() {
     {
       case 0:
         {
-          sensors_event_t event;
-          dht[port].temperature().getEvent(&event);
-          output += ("Sensor Port " + String(port+1) + ": Humidity sensor: " + String(event.relative_humidity) + "\n");
+          float humidity = dht[port].readHumidity();
+          float temperature = dht[port].readTemperature(true);
+          output += ("Port " + String(port+1) + ": Humidity: " + String(humidity) + " Temp F: " + String(temperature) + "\n");
         }
         break;
       case 1:
         {
           int sensorValue = analogRead(sensorAPins[port]);
           int outputValue = map(sensorValue, 0, 1023, 100, 0);
-          output += ("Sensor Port " + String(port+1) + ": Soil Moisture: " + String(outputValue) + "\n");
+          output += ("Port " + String(port+1) + ": Soil Moisture: " + String(outputValue) + "\n");
         }
         break;
       case 2:
         {
           int sensorValue = analogRead(sensorAPins[port]);
           int outputValue = max(map(sensorValue, 0, 1023, 100, 0), 0);
-          output += ("Sensor Port " + String(port+1) + ": Light: " + String(sensorValue) + "\n");
+          output += ("Port " + String(port+1) + ": Light: " + String(sensorValue) + "\n");
         }
         break;
       case 3:
         {
-          float PPM = mq135[port].getRZero();
-          output += ("Sensor Port " + String(port+1) + ": Air ppm: " + String(PPM) + "\n");
+          float PPM = mq135[port].getPPM();
+          output += ("Port " + String(port+1) + ": Air ppm: " + String(PPM) + "\n");
         }
         break;
       case NO_SENSOR:
         {
-          output += ("Sensor Port " + String(port+1) + ": No Sensor Selected!\n");
+          output += ("Port " + String(port+1) + ": No Sensor Selected!\n");
         }
         break;
       case SENSOR_OVERLOAD:
         {
-          output += ("Sensor Port " + String(port+1) + ": No Sensor Selected!\n");
+          output += ("Port " + String(port+1) + ": No Sensor Selected!\n");
         }
         break;
     }
